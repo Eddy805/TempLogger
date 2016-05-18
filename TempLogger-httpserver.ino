@@ -4,11 +4,13 @@
 #include <ESP8266mDNS.h>
 #include "DHT.h"
 
+#include "WIFI_credentials.h"   // define WIFI_SSID and WIFI_PASSWORD here
+
 #define DHTTYPE DHT22
 #define DHTPIN D2
 
-const char* ssid = WIFI_SSID;
-const char* password = WIFI_PASSWORD;
+const char* ssid = WIFI_SSID;         // defined in WIFI_credentials.h
+const char* password = WIFI_PASSWORD; //
 
 ESP8266WebServer server(80);
 DHT dht(DHTPIN, DHTTYPE);
