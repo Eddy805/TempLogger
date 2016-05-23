@@ -11,6 +11,8 @@
 const char* ssid = WIFI_SSID;         // defined in WIFI_credentials.h
 const char* password = WIFI_PASSWORD; //
 const char* mqtt_server = "io.adafruit.com";
+const char* mqtt_user = MQTT_USER;
+const char* mqtt_pass = MQTT_PASSWORD;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -20,7 +22,8 @@ DHT dht(DHTPIN, DHTTYPE);
 const int led = LED_BUILTIN;
 
 long lastMsg = 0;
-char msg[50];
+char msg[50] = {0};
+char last_msg[50] = {0};
 
 void setup_wifi() {
 
@@ -63,7 +66,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("ESP8266Client")) {
+    if (client.connect("ESP8266Client", mqtt_user, mqtt_pass)) {
       Serial.println("connected");
     } else {
       Serial.print("failed, rc=");
@@ -81,7 +84,7 @@ void loop(void){
   client.loop();
 
   long now = millis();
-  if (now - lastMsg > 2000) {
+  if (now - lastMsg > 5000) {
     lastMsg = now;
 
     Serial.println("Reading temperature");
@@ -91,11 +94,20 @@ void loop(void){
       Serial.println("Failed to read from DHT sensor!");
       return;
     }
+    
+    dtostrf(t, 4, 1, msg);
 
-    sprintf (msg, "%f", t);
-    Serial.print("Publish message: ");
-    Serial.println(msg);
-
-    client.publish("Eddy8/f/fridge/temperature", msg);
+    if (strcmp(last_msg, msg) != 0)
+    {    
+      Serial.print("Publish message: ");
+      Serial.println(msg);
+  
+      client.publish("Eddy8/f/fridge-temp", msg);
+      strcpy(last_msg, msg);
+    } else {
+      Serial.print("Skipping message, identical to last: ");
+      Serial.println(msg);
+    }
+ 
   }
 }
