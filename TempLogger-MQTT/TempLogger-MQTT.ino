@@ -23,7 +23,8 @@ const int led = LED_BUILTIN;
 
 long lastMsg = 0;
 char msg[50] = {0};
-char last_msg[50] = {0};
+char last_hmsg[50] = {0};
+char last_tmsg[50] = {0};
 
 void setup_wifi() {
 
@@ -94,20 +95,37 @@ void loop(void){
       Serial.println("Failed to read from DHT sensor!");
       return;
     }
+
+    /* Publish temperature to MQTT */
     
     dtostrf(t, 4, 1, msg);
-
-    if (strcmp(last_msg, msg) != 0)
+    
+    if (strcmp(last_tmsg, msg) != 0)
     {    
       Serial.print("Publish message: ");
       Serial.println(msg);
   
       client.publish("Eddy8/f/fridge-temp", msg);
-      strcpy(last_msg, msg);
+      strcpy(last_tmsg, msg);
     } else {
       Serial.print("Skipping message, identical to last: ");
       Serial.println(msg);
     }
- 
+
+    /* Publish humidity to MQTT */
+
+    dtostrf(h, 4, 1, msg);
+    
+    if (strcmp(last_hmsg, msg) != 0)
+    {    
+      Serial.print("Publish message: ");
+      Serial.println(msg);
+  
+      client.publish("Eddy8/f/fridge-humi", msg);
+      strcpy(last_hmsg, msg);
+    } else {
+      Serial.print("Skipping message, identical to last: ");
+      Serial.println(msg);
+    }
   }
 }
