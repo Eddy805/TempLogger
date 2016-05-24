@@ -4,7 +4,7 @@
 #include <ESP8266mDNS.h>
 #include "DHT.h"
 
-#include "WIFI_credentials.h"   // define WIFI_SSID and WIFI_PASSWORD here
+#include "credentials.h"   // define WIFI_SSID and WIFI_PASSWORD here
 
 #define DHTTYPE DHT22
 #define DHTPIN D2

@@ -3,7 +3,7 @@
 
 #include "DHT.h"
 
-#include "WIFI_credentials.h"   // define WIFI_SSID and WIFI_PASSWORD here
+#include "credentials.h"   // define WIFI and MQTT credentials here
 
 #define DHTTYPE DHT22
 #define DHTPIN D2
