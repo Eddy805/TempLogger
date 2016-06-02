@@ -19,12 +19,7 @@ PubSubClient client(espClient);
 
 DHT dht(DHTPIN, DHTTYPE);
 
-const int led = LED_BUILTIN;
-
-long lastMsg = 0;
 char msg[50] = {0};
-char last_hmsg[50] = {0};
-char last_tmsg[50] = {0};
 
 void setup_wifi() {
 
@@ -48,9 +43,6 @@ void setup_wifi() {
 }
 
 void setup(void){
-  pinMode(led, OUTPUT);
-  digitalWrite(led, 0);
-
   Serial.begin(9600);
   
   setup_wifi();
@@ -84,48 +76,37 @@ void loop(void){
   }
   client.loop();
 
-  long now = millis();
-  if (now - lastMsg > 5000) {
-    lastMsg = now;
-
-    Serial.println("Reading temperature");
-    float h = dht.readHumidity();
-    float t = dht.readTemperature();
-    if (isnan(h) || isnan(t)) {
-      Serial.println("Failed to read from DHT sensor!");
-      return;
-    }
-
-    /* Publish temperature to MQTT */
-    
-    dtostrf(t, 4, 1, msg);
-    
-    if (strcmp(last_tmsg, msg) != 0)
-    {    
-      Serial.print("Publish message: ");
-      Serial.println(msg);
-  
-      client.publish("Eddy8/f/fridge-temp", msg);
-      strcpy(last_tmsg, msg);
-    } else {
-      Serial.print("Skipping message, identical to last: ");
-      Serial.println(msg);
-    }
-
-    /* Publish humidity to MQTT */
-
-    dtostrf(h, 4, 1, msg);
-    
-    if (strcmp(last_hmsg, msg) != 0)
-    {    
-      Serial.print("Publish message: ");
-      Serial.println(msg);
-  
-      client.publish("Eddy8/f/fridge-humi", msg);
-      strcpy(last_hmsg, msg);
-    } else {
-      Serial.print("Skipping message, identical to last: ");
-      Serial.println(msg);
-    }
+  Serial.println("Reading temperature");
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  if (isnan(h) || isnan(t)) {
+    Serial.println("Failed to read from DHT sensor!");
+    delay(1000);
+    return;
   }
+
+  /* Publish temperature to MQTT */
+  
+  dtostrf(t, 4, 1, msg);
+  
+  Serial.print("Publish message: ");
+  Serial.println(msg);
+
+  client.publish("Eddy8/f/fridge-temp", msg);
+
+  /* Publish humidity to MQTT */
+
+  dtostrf(h, 4, 1, msg);
+  
+  Serial.print("Publish message: ");
+  Serial.println(msg);
+
+  client.publish("Eddy8/f/fridge-humi", msg);
+  Serial.println("Going to sleep for 5 minutes");
+  
+  ESP.deepSleep(5 * 60 * 1000000); // 5 minutes
+  //ESP.deepSleep(10 * 1000000); // 10 seconds
+
+  Serial.println("Sleep failed!");
+  delay(2000);
 }
