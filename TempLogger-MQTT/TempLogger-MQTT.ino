@@ -10,16 +10,19 @@
 
 const char* ssid = WIFI_SSID;         // defined in WIFI_credentials.h
 const char* password = WIFI_PASSWORD; //
-const char* mqtt_server = "io.adafruit.com";
-const char* mqtt_user = MQTT_USER;
-const char* mqtt_pass = MQTT_PASSWORD;
+const char* mqtt_server = "192.168.178.201";
+// const char* mqtt_user = MQTT_USER;
+// const char* mqtt_pass = MQTT_PASSWORD;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 DHT dht(DHTPIN, DHTTYPE);
 
-char msg[50] = {0};
+char msg[1024] = {0};
+char tmp[10] = {0};
+char hum[10] = {0};
+int  humstat;
 
 void setup_wifi() {
 
@@ -59,7 +62,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("ESP8266Client", mqtt_user, mqtt_pass)) {
+    if (client.connect("ESP8266Client")) {
       Serial.println("connected");
     } else {
       Serial.print("failed, rc=");
@@ -74,7 +77,7 @@ void loop(void){
   if (!client.connected()) {
     reconnect();
   }
-  client.loop();
+  //client.loop();
 
   Serial.println("Reading temperature");
   float h = dht.readHumidity();
@@ -85,23 +88,23 @@ void loop(void){
     return;
   }
 
-  /* Publish temperature to MQTT */
+  /* Publish temperature & humidity to MQTT */
   
-  dtostrf(t, 4, 1, msg);
-  
+  dtostrf(t, 0, 1, tmp);
+  dtostrf(h, 0, 1, hum);
+  if (h < 40) {
+    humstat = 2;             // dry
+  } else if (h >= 70) {
+    humstat = 3;            // wet
+  } else {
+    humstat = 1;            // comfortable
+  }
+  sprintf(msg, "{\"idx\":18, \"nvalue\": 0, \"svalue\": \"%s;%s;%d\"}", tmp, hum, humstat);
   Serial.print("Publish message: ");
   Serial.println(msg);
 
-  client.publish("Eddy8/f/fridge-temp", msg);
+  client.publish("domoticz/in", msg);
 
-  /* Publish humidity to MQTT */
-
-  dtostrf(h, 4, 1, msg);
-  
-  Serial.print("Publish message: ");
-  Serial.println(msg);
-
-  client.publish("Eddy8/f/fridge-humi", msg);
   Serial.println("Going to sleep for 5 minutes");
   
   ESP.deepSleep(5 * 60 * 1000000); // 5 minutes
